@@ -18,20 +18,18 @@ Shader "Unlit/InstancingURP"
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
+            #include "UnityLightingCommon.cginc" // for _LightColor0
             struct BoidData
             {
                 float3 velocity;
                 float3 position;
             };
-            //#ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
             StructuredBuffer<BoidData> _BoidDataBuffer;
-            //#endif
-
-           
 
             struct appdata
             {
                 float4 vertex : POSITION;
+                float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
                 uint instanceID : SV_InstanceID;
             };
@@ -39,8 +37,10 @@ Shader "Unlit/InstancingURP"
             struct v2f
             {
                 float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
+                float4 diff : COLOR0;
             };
 
             sampler2D _MainTex;
@@ -65,10 +65,7 @@ Shader "Unlit/InstancingURP"
             v2f vert (appdata v)
             {
                 v2f o;
-                //o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 UNITY_TRANSFER_FOG(o,o.vertex);
-
-//#ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED 
 
                 BoidData boidData = _BoidDataBuffer[v.instanceID];
 
@@ -86,18 +83,19 @@ Shader "Unlit/InstancingURP"
                 object2world._14_24_34 += pos.xyz;
 
                 o.vertex = UnityObjectToClipPos(mul(object2world, v.vertex));
-                //v.normal = normalize(mul(object2world, v.normal));
-//#endif
+                o.normal = UnityObjectToWorldNormal(v.normal);
+
+				float nl = max(0, dot(o.normal, _WorldSpaceLightPos0.xyz));
+                o.diff = nl * _LightColor0;
 
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
-                // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
+                col *= i.diff;
                 return col;
             }
             ENDCG
