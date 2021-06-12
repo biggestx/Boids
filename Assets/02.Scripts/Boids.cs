@@ -127,6 +127,7 @@ public class Boids : MonoBehaviour
         cs.SetBuffer(id, "BoidForceBufferWrite", BoidForceBuffer);
         cs.Dispatch(id, threadGroupSize, 1, 1); 
 
+
         id = cs.FindKernel("IntegrateCS"); 
         cs.SetFloat("DeltaTime", Time.deltaTime);
         cs.SetBuffer(id, "BoidForceBufferRead", BoidForceBuffer);
