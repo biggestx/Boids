@@ -6,12 +6,12 @@ Environment
 ----
     - Unity Engine 2020.3.1f1
 
-Language
+Languages
 ----
     - C#
     - HLSL
 
-Details
+Features
 ----
     - Boids Algorithm
     - Instancing
